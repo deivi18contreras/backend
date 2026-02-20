@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 
-const productoSchems = new mongoose.Schema({
-    vendedor_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Usuario',
-        required: true
-    },
+const productoSchema = new mongoose.Schema({
+
     nombre: {
         type: String,
         required: true
@@ -19,16 +15,27 @@ const productoSchems = new mongoose.Schema({
         min: 0
     },
     stock: {
-        type: String,
+        type: Number,
         default: 0
     },
     imagen_url: {
         type: String
     },
+    vendedor_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
+    },
     categoria_id: {
-        tyupe: mongoose.Schema.Types.ObjectId, ref: 'categoria'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Categoria',
+        required: true
     }
 },
     {
-        timestamps: true
-    })
+        timestamps: {
+            createdAt: "fecha_creacion",
+            updatedAt: "fecha_actualizacion"
+        }
+    });
+export default mongoose.model("Producto", productoSchema)

@@ -1,15 +1,16 @@
 {
   "name": "backendcompleto",
   "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "deivi",
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+   "docs":"node-e\"console.log('Swagger docs en http://localhost:3000/api-docs')\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

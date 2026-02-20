@@ -1,18 +1,5 @@
 import mongoose from "mongoose";
 
-const categoriaSchema = new mongoose.Schema({ 
-    nombre: {
-        type: String,
-        required: true
-    },
-    descripcion: {
-        type: String
-    },
-    imagen_icono: {
-        type: String
-    }
-});
-
 const usuarioSchema = new mongoose.Schema({
     nombre: {
         type: String,
@@ -34,10 +21,8 @@ const usuarioSchema = new mongoose.Schema({
         enum: ["comprador", "vendedor", "admin"],
         default: "comprador"
     },
-    categoria: categoriaSchema, 
 }, 
 { 
-    
     timestamps: { 
         createdAt: "fecha_registro", 
         updatedAt: false       
