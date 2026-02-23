@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validarCampos } from "../middlewares/validaciones.js";
 import { validacionCrearUsuario, validacionId } from "../middlewares/validarUsuarios.js";
-import { getUsuario, getUsuarioEmail, postUsuario, putUsuario, deleteUsuario } from "../controllers/usuarioController.js";
+import { getUsuario, getUsuarioEmail,getUsuarioById, postUsuario, putUsuario, deleteUsuario } from "../controllers/usuarioController.js";
 
 const router = Router();
 /**
@@ -10,6 +10,8 @@ const router = Router();
  *   get:
  *     summary: Listar todos los usuarios
  *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: rol
@@ -36,13 +38,77 @@ const router = Router();
  *                 usuarios:
  *                   type: array
  *                   items:
- *                     type: object
+ *                     $ref: '#/components/schemas/Usuario'
  *       401:
  *         description: No autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.get("/", getUsuario);
 
+/**
+ * @swagger
+ * /api/usuarios/buscar:
+ *   get:
+ *     summary: Buscar usuario por email
+ *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Email del usuario a buscar
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/buscar", getUsuarioEmail);
 
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   get:
+ *     summary: Obtener usuario por ID
+ *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/:id", [validacionId, validarCampos],getUsuarioById);
 
 /**
  * @swagger
@@ -55,58 +121,23 @@ router.get("/", getUsuario);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - nombre
- *               - email
- *               - password
- *             properties:
- *               nombre:
- *                 type: string
- *                 example: Juan Pérez
- *               email:
- *                 type: string
- *                 format: email
- *                 example: juan@ejemplo.com
- *               password:
- *                 type: string
- *                 minLength: 8
- *                 example: MiPassword123!
- *               rol:
- *                 type: string
- *                 enum: [comprador, vendedor]
- *                 default: comprador
+ *             $ref: '#/components/schemas/UsuarioInput'
  *     responses:
  *       201:
- *         description: Usuario creado exitosamente
+ *         description: Usuario creado correctamente
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 mensaje:
- *                   type: string
- *                   example: Usuario creado exitosamente
+ *               $ref: '#/components/schemas/Usuario'
  *       400:
- *         description: Datos inválidos
- *       409:
- *         description: Email ya registrado
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post("/", [validacionCrearUsuario, validarCampos], postUsuario);
-/**
- * @swagger
- * /api/usuarios/buscar:
- *   get:
- *     summary: Buscar usuario por email
- *     tags: [Usuarios]
- *     responses:
- *       200:
- *         description: Usuario encontrado
- */
-router.get("/buscar", getUsuarioEmail);
+
 
 /**
  * @swagger
@@ -129,11 +160,29 @@ router.get("/buscar", getUsuarioEmail);
  *             properties:
  *               nombre:
  *                 type: string
+ *                 example: Juan Actualizado
  *               rol:
  *                 type: string
+ *                 enum: [comprador, vendedor, admin]
  *     responses:
  *       200:
- *         description: Actualizado
+ *         description: Usuario actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.put("/:id", [validacionId, validarCampos], putUsuario);
 
@@ -143,6 +192,8 @@ router.put("/:id", [validacionId, validarCampos], putUsuario);
  *   delete:
  *     summary: Eliminar usuario por ID
  *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -151,7 +202,17 @@ router.put("/:id", [validacionId, validarCampos], putUsuario);
  *           type: string
  *     responses:
  *       200:
- *         description: Eliminado
+ *         description: Usuario eliminado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.delete("/:id", [validacionId, validarCampos], deleteUsuario);
 

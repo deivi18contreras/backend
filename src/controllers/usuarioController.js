@@ -1,18 +1,30 @@
-import { sendEmail } from "../helpers/sendEmail.js"
+import { sendEmail } from "../utils/sendEmail.js"
 import Usuario from "../models/Usuario.js"
 import bcrypt from "bcryptjs"
+import { validationResult } from "express-validator"
 
-export const getUsuario = async (req, res) => {
+export const getUsuario = async (req, res, next) => {
     try {
-        const usuarios = await Usuario.find()
-        res.json(usuarios)
+        const filtros = {
+            rol: req.query.rol,
+            busqueda: req.query.q,
+            pagina: req.query.pagina,
+            limite: req.query.limite
+        };
+        const usuarios = await Usuario.obtenerTodos(filtros);
+
+        res.json({
+            usuarios,
+            filtros_aplicados: filtros
+        })
     } catch (error) {
-        res.status(400).json({ error })
+        next(error)
     }
-}
+};
 
-export const getUsuarioEmail = async (req, res) => {
+export const getUsuarioEmail = async (req, res, next) => {
     try {
+
         const { email } = req.query
         const usuarios = await Usuario.findOne({ email })
 
@@ -23,15 +35,33 @@ export const getUsuarioEmail = async (req, res) => {
         }
         res.json(usuarios)
     } catch (error) {
-        res.status(500).json({
-            error: error.message
-        })
+        next(error)
     }
-}
+};
 
-export const postUsuario = async (req, res) => {
+export const getUsuarioById = async (req, res, next) => {
     try {
+        const usuario = await Usuario.buscarPorId(req.params.id);
+        if (!usuario) {
+            return res.status(404).json({ error: true, mensaje: "Usuario no encontrado" });
+        }
+        res.json({ error: false, usuario });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const postUsuario = async (req, res, next) => {
+    try {
+        const errores = validationResult(req);
+        if (!errores.isEmpty()) {
+            return res.status(400).json({ error: true, errores: errores.array() })
+        }
         const { nombre, email, password, rol } = req.body
+        const usuarioExistente = await Usuario.buscarPorEmail(email);
+        if(usuarioExistente){
+            return res.status(409).json({error: true, mensaje:'El email ya esta registrado'})
+        }
 
         const salt = bcrypt.genSaltSync(10)
         const passwordHash = bcrypt.hashSync(password, salt)
@@ -44,15 +74,7 @@ export const postUsuario = async (req, res) => {
         });
         await usuario.save()
 
-        try {
-            await sendEmail(
-                usuario.email,
-                "¡Bienvenido al Marketplace!",
-                `Hola ${usuario.nombre}, gracias por registrarte como ${usuario.rol}.`
-            )
-        } catch (mailError) {
-            console.log('El usuario se guardo, pero fallo al enviar correo de bienvenida', mailError);
-        }
+        enviarEmailBienvenida(usuario)
 
         res.status(201).json({
             msg: 'Usuario registrado con éxito',
@@ -65,38 +87,30 @@ export const postUsuario = async (req, res) => {
         })
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            msg: "Hubo un error al registrar el usuario"
-        })
-
+        next(error)  
     }
 }
 
-export const putUsuario = async (req, res) => {
+export const putUsuario = async (req, res, next) => {
     try {
-        const { id } = req.params
-        const { nombre } = req.body
-
-        const usuario = await Usuario.findByIdAndUpdate(id, { nombre },
-            { new: true }
-        )
+        const usuario = await Usuario.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {new: true, runValidators: true}
+        ).select('-password')
         if (!usuario) {
             return res.status(404).json({ msg: "Usuario no encontrado" })
         }
         res.json({ msg: "Usuario modificado correctamente", usuario })
 
     } catch (error) {
-        res.status(500).json({ msg: error.message })
+        next(error)
     }
 }
 
-export const deleteUsuario = async (req, res) => {
+export const deleteUsuario = async (req, res, next) => {
     try {
-        const { id } = req.params
-
-        const usuario = await Usuario.findByIdAndDelete(id)
-
+        const usuario = await Usuario.findByIdAndDelete(req.params.id)
         if (!usuario) {
             return res.status(404).json({
                 msg: "Usuario no encontrado"
@@ -106,7 +120,18 @@ export const deleteUsuario = async (req, res) => {
             msg: "Usuario eliminado correctamente"
         })
     } catch (error) {
-        res.status(500).json({ msg: error.message })
-
+        next(error)
     }
-}
+};
+
+const enviarEmailBienvenida = async (usuario) => {
+    try {
+        await sendEmail({
+            email: usuario.email,
+            asunto: "¡Bienvenido al Marketplace!",
+            mensaje: `Hola ${usuario.nombre}, gracias por registrarte.`
+        });
+    } catch (error) {
+        console.error('Error al enviar email:', error.message);
+    }
+};

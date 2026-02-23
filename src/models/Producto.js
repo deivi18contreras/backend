@@ -9,6 +9,14 @@ const productoSchema = new mongoose.Schema({
     descripcion: {
         type: String
     },
+    descripcion_ia: {
+        type: String,
+        descripcion: 'Descripcion optimizada por Gemini'
+    },
+    analisis_ia: {
+        type: Object,
+        default: {}
+    },
     precio: {
         type: Number,
         required: true,
@@ -19,7 +27,8 @@ const productoSchema = new mongoose.Schema({
         default: 0
     },
     imagen_url: {
-        type: String
+        type: String,
+        default: ""
     },
     vendedor_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -38,4 +47,47 @@ const productoSchema = new mongoose.Schema({
             updatedAt: "fecha_actualizacion"
         }
     });
+
+productoSchema.statics.buscarPorId = async function (id) {
+    return await this.findById(id)
+        .populate('vendedor_id', 'nombre email')
+        .populate('categoria_id', 'nombre')
+};
+
+productoSchema.statics.obtenerConFiltro = async function (filtros = {}) {
+    const query = {};
+
+    if (filtros.categoria_id) query.categoria_id = filtros.categoria_id;
+    if (filtros.vendedor_id) query.vendedor_id = filtros.vendedor_id;
+
+    if (filtros.precio_min || filtros.precio_max) {
+        query.precio = {}
+
+        if (filtros.precio_min) query.precio.$gte = Number(filtros.precio_min);
+        if (filtros.precio_max) query.precio.$lte = Number(filtros.precio_max);
+    }
+
+    if (filtros.en_stock === 'true') {
+        query.stock = { $gt: 0 };
+    }
+
+    if (filtros.busqueda) {
+        query.$or = [
+            { nombre: { $regex: filtros.busqueda, $options: 'i' } },
+            { descripcion: { $regex: filtros.busqueda, $options: 'i' } }
+        ];
+    }
+
+    const limite = Math.min(parseInt(filtros.limite) || 10, 50);
+    const pagina = parseInt(filtros.pagina) || 1;
+    const skip = (pagina - 1) * limite;
+
+    return await this.find(query)
+        .populate('vendedor_id', 'nombre')
+        .populate('categoria_id', 'nombre')
+        .sort({ fecha_creacion: -1 })
+        .limit(limite)
+        .skip(skip);
+};
+
 export default mongoose.model("Producto", productoSchema)

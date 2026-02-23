@@ -1,6 +1,6 @@
 import Producto from "../models/Producto.js"
 import Categoria from "../models/Categoria.js"
-import { generarDescripcionIA } from "../helpers/geminiHelper.js"
+
 
 export const postProducto = async (req, res) => {
     try {
@@ -26,7 +26,7 @@ export const postProducto = async (req, res) => {
 
         res.status(201).json({
             msg: "Producto creado con éxito",
-            produducto: nuevoProducto
+            producto: nuevoProducto
         });
 
     } catch (error) {

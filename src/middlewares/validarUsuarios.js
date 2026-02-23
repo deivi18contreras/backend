@@ -28,7 +28,7 @@ export const validacionCrearUsuario =[
 
 export const validacionId = [
     param('id')
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .isMongoId()
     .withMessage('El id no es un formato de mongoDB válido')
 
 ]

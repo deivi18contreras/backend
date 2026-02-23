@@ -18,7 +18,7 @@ const ordenSchema = new mongoose.Schema({
 },
     {
         timestamps: {
-            createdAt: "fecha_creacin",
+            createdAt: "fecha_creacion",
             updateAt: true
         }
     })
