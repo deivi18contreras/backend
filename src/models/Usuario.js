@@ -21,23 +21,31 @@ const usuarioSchema = new mongoose.Schema({
         enum: ["comprador", "vendedor", "admin"],
         default: "comprador"
     },
-}, 
-{ 
-    timestamps: { 
-        createdAt: "fecha_registro", 
-        updatedAt: false       
-    } 
-});
+    resetToken: {
+        type: String,
+        default: null
+    },
+    resetTokenExpire: {
+        type: Date,
+        default: null
+    }
+},
+    {
+        timestamps: {
+            createdAt: "fecha_registro",
+            updatedAt: false
+        }
+    });
 
 usuarioSchema.statics.buscarPorEmail = async function (email) {
-    return await this.findOne({email})
+    return await this.findOne({ email })
 };
 
 usuarioSchema.statics.buscarPorId = async function (id) {
-    return await this.findById(id).select('-password')  
+    return await this.findById(id).select('-password')
 };
 
-usuarioSchema.statics.obtenerTodos = async function(filtros = {}) {
+usuarioSchema.statics.obtenerTodos = async function (filtros = {}) {
     const query = {};
 
     if (filtros.rol) {

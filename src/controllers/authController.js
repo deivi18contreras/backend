@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
-import { validationResult } from 'express-validator';
 import Usuario from '../models/Usuario.js';
+import { validationResult } from 'express-validator';
 import { generarToken } from '../utils/jwt.js';
+import { sendEmail } from '../utils/sendEmail.js';
 
 export const registro = async (req, res, next) => {
     try {
@@ -12,7 +13,7 @@ export const registro = async (req, res, next) => {
 
         const { nombre, email, password, rol } = req.body;
 
-        const usuarioExistente = await Usuario.buscarPorEmail(email);
+        const usuarioExistente = await Usuario.findOne({ email });
         if (usuarioExistente) {
             return res.status(409).json({ error: true, mensaje: 'El email ya está registrado' });
         }
@@ -26,12 +27,17 @@ export const registro = async (req, res, next) => {
             password: passwordHash,
             rol: rol || 'comprador'
         });
+        await sendEmail(email, 'Bienvenido a Marketplace Inteligente', `
+            Hola ${nombre},<br><br>
+            Tu cuenta ha sido creada exitosamente en Marketplace Inteligente.<br>
+            ¡Bienvenido! 🎉
+        `);
 
-        const token = generarToken(nuevoUsuario);
+        const token = generarToken({ id: nuevoUsuario._id, rol: nuevoUsuario.rol });
 
         res.status(201).json({
             error: false,
-            mensaje: 'Usuario registrado exitosamente',
+            mensaje: 'Usuario registrado exitosamente. Revisa tu correo para confirmación',
             usuario: {
                 id: nuevoUsuario._id,
                 nombre: nuevoUsuario.nombre,
@@ -59,7 +65,7 @@ export const login = async (req, res, next) => {
             return res.status(401).json({ error: true, mensaje: 'Credenciales incorrectas' });
         }
 
-        const token = generarToken(usuario);
+        const token = generarToken({ id: usuario._id, rol: usuario.rol });
 
         res.json({
             error: false,
@@ -79,9 +85,9 @@ export const login = async (req, res, next) => {
 
 export const perfil = async (req, res, next) => {
     try {
-        
+
         const usuario = await Usuario.findById(req.usuario.id).select('-password');
-        
+
         if (!usuario) {
             return res.status(404).json({ error: true, mensaje: 'Usuario no encontrado' });
         }
@@ -106,23 +112,23 @@ export const cambiarPassword = async (req, res, next) => {
         const usuario = await Usuario.findById(req.usuario.id).select('+password');
         const esValida = bcrypt.compare(passwordActual, usuario.password);
         if (!esValida) {
-            return res.status(401).json({ 
-                error: true, 
-                mensaje: 'La contraseña actual no coincide' 
+            return res.status(401).json({
+                error: true,
+                mensaje: 'La contraseña actual no coincide'
             });
         }
 
         const esMismaPassword = bcrypt.compare(passwordNueva, usuario.password);
         if (esMismaPassword) {
-            return res.status(400).json({ 
-                error: true, 
-                mensaje: 'La nueva contraseña no puede ser igual a la anterior' 
+            return res.status(400).json({
+                error: true,
+                mensaje: 'La nueva contraseña no puede ser igual a la anterior'
             });
         }
 
         const salt = await bcrypt.genSalt(12);
         usuario.password = await bcrypt.hash(passwordNueva, salt);
-        
+
         await usuario.save();
 
         res.json({

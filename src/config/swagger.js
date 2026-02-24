@@ -13,7 +13,7 @@ const swaggerOptions = {
             }
         },
         servers: [
-            { 
+            {
                 url: `http://localhost:${process.env.PORT || 3000}`,
                 description: 'Servidor Local de Desarrollo'
             }
@@ -30,26 +30,26 @@ const swaggerOptions = {
                 Usuario: {
                     type: 'object',
                     properties: {
-                        _id: { 
+                        _id: {
                             type: 'string',
                             description: 'ID de MongoDB',
                             example: '65f3a12b4f1a2c3d4e5f6789'
                         },
-                        nombre: { 
+                        nombre: {
                             type: 'string',
                             example: 'Juan Pérez'
                         },
-                        email: { 
+                        email: {
                             type: 'string',
                             format: 'email',
                             example: 'juan@ejemplo.com'
                         },
-                        rol: { 
+                        rol: {
                             type: 'string',
                             enum: ['comprador', 'vendedor', 'admin'],
                             example: 'comprador'
                         },
-                        fecha_registro: { 
+                        fecha_registro: {
                             type: 'string',
                             format: 'date-time'
                         }
@@ -60,20 +60,20 @@ const swaggerOptions = {
                     type: 'object',
                     required: ['nombre', 'email', 'password'],
                     properties: {
-                        nombre: { 
+                        nombre: {
                             type: 'string',
                             example: 'Juan Pérez'
                         },
-                        email: { 
+                        email: {
                             type: 'string',
                             format: 'email',
                             example: 'juan@ejemplo.com'
                         },
-                        password: { 
+                        password: {
                             type: 'string',
                             example: 'MiPassword123'
                         },
-                        rol: { 
+                        rol: {
                             type: 'string',
                             enum: ['comprador', 'vendedor', 'admin'],
                             default: 'comprador'
@@ -83,18 +83,16 @@ const swaggerOptions = {
 
                 Producto: {
                     type: 'object',
-                    required: ['nombre', 'precio'],
+                    required: ['nombre', 'precio', 'stock', 'vendedor_id', 'categoria_id'],
                     properties: {
                         _id: { type: 'string' },
-                        nombre: { type: 'string', example: 'Laptop Gaming' },
-                        descripcion: { type: 'string' },
-                        precio: { type: 'number', example: 1200.50 },
-                        stock: { type: 'integer', example: 10 },
-                        imagen_url: { type: 'string' },
-                        analisis_ia: { 
-                            type: 'string',
-                            description: 'Descripción generada por Gemini'
-                        }
+                        nombre: { type: 'string', example: 'Audífonos Sony WH-1000XM5' },
+                        descripcion: { type: 'string', example: 'Cancelación de ruido líder en la industria.' },
+                        precio: { type: 'number', example: 350.00 },
+                        stock: { type: 'integer', example: 15 },
+                        vendedor_id: { type: 'string', description: 'ID del usuario vendedor' },
+                        categoria_id: { type: 'string', description: 'ID de la categoría' },
+                        fecha_creacion: { type: 'string', format: 'date-time' }
                     }
                 },
 
@@ -103,7 +101,7 @@ const swaggerOptions = {
                     properties: {
                         error: { type: 'boolean', example: true },
                         mensaje: { type: 'string', example: 'Error descriptivo' },
-                        detalles: { 
+                        detalles: {
                             type: 'array',
                             items: { type: 'object' }
                         }

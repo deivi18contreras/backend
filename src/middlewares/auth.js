@@ -1,4 +1,4 @@
-import { generarToken, validarToken, extraerTokenDeHeader } from '../utils/jwt.js'
+import { validarToken, extraerTokenDeHeader } from '../utils/jwt.js'
 import Usuario from '../models/Usuario.js'
 
 export const autenticar = async (req, res, next) => {
@@ -7,7 +7,7 @@ export const autenticar = async (req, res, next) => {
 
         const token = extraerTokenDeHeader(autHeader);
         const payload = validarToken(token);
-        const usuario = await Usuario.buscaraPorId(payload.id);
+        const usuario = await Usuario.findById(payload.id).select('-password');
 
         if (!usuario) {
             return res.status(401).json({

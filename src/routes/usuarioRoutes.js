@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { validarCampos } from "../middlewares/validaciones.js";
 import { validacionCrearUsuario, validacionId } from "../middlewares/validarUsuarios.js";
-import { getUsuario, getUsuarioEmail,getUsuarioById, postUsuario, putUsuario, deleteUsuario } from "../controllers/usuarioController.js";
+import { getUsuario, getUsuarioEmail,getUsuarioById, postUsuario, putUsuario, deleteUsuario} from "../controllers/usuarioController.js";
+import { requiereRol, autenticar} from "../middlewares/auth.js"
 
 const router = Router();
+
+router.use(autenticar)
 /**
  * @swagger
  * /api/usuarios:
@@ -46,7 +49,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", getUsuario);
+router.get("/", requiereRol('admin'), getUsuario);
 
 /**
  * @swagger
@@ -78,7 +81,7 @@ router.get("/", getUsuario);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/buscar", getUsuarioEmail);
+router.get("/buscar", requiereRol('admin'), getUsuarioEmail);
 
 /**
  * @swagger
@@ -108,7 +111,7 @@ router.get("/buscar", getUsuarioEmail);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id", [validacionId, validarCampos],getUsuarioById);
+router.get("/:id", [validacionId, validarCampos], getUsuarioById);
 
 /**
  * @swagger
@@ -137,7 +140,6 @@ router.get("/:id", [validacionId, validarCampos],getUsuarioById);
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/", [validacionCrearUsuario, validarCampos], postUsuario);
-
 
 /**
  * @swagger
@@ -214,6 +216,6 @@ router.put("/:id", [validacionId, validarCampos], putUsuario);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete("/:id", [validacionId, validarCampos], deleteUsuario);
+router.delete("/:id", [requiereRol('admin'), validacionId, validarCampos], deleteUsuario);
 
 export default router;

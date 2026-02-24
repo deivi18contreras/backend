@@ -2,8 +2,9 @@ import { Router } from "express";
 import { getProductos, postProducto, putProducto, deleteProducto } from "../controllers/productoController.js";
 import { validacionIdProducto, validacionesCrearProducto } from "../middlewares/validarProducto.js";
 import { validarCampos } from "../middlewares/validaciones.js";
+import {autenticar, requiereRol} from "../middlewares/auth.js"
 
-const router = Router();
+const router = Router(); 
 
 /**
  * @swagger
@@ -11,15 +12,16 @@ const router = Router();
  *   get:
  *     summary: Listar todos los productos
  *     tags: [Productos]
+ *     description: Retorna una lista de todos los productos disponibles en el marketplace
  *     responses:
  *       200:
- *         description: Lista de productos obtenida
+ *         description: Lista de productos obtenida correctamente
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
+ *                 $ref: '#/components/schemas/Producto'
  */
 router.get("/", getProductos);
 
@@ -29,36 +31,25 @@ router.get("/", getProductos);
  *   post:
  *     summary: Crear un producto con IA
  *     tags: [Productos]
+ *     security:
+ *       - BearerAuth: []
+ *     description: Permite a Administradores y Vendedores crear un producto. La descripción puede ser generada vía IA Gemini.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - nombre
- *               - precio
- *               - stock
- *               - vendedor_id
- *               - categoria_id
- *             properties:
- *               nombre:
- *                 type: string
- *               precio:
- *                 type: number
- *               stock:
- *                 type: number
- *               vendedor_id:
- *                 type: string
- *               categoria_id:
- *                 type: string
+ *             $ref: '#/components/schemas/Producto'
  *     responses:
  *       201:
  *         description: Producto creado exitosamente
  *       400:
- *         description: Datos inválidos
+ *         description: Datos de entrada inválidos
+ *       401:
+ *         description: No autorizado - Token faltante o inválido
  */
-router.post("/", [validacionesCrearProducto, validarCampos], postProducto);
+router.post(
+  "/", [autenticar, requiereRol(['admin', 'vendedor']), validacionesCrearProducto, validarCampos], postProducto);
 
 /**
  * @swagger
@@ -66,53 +57,53 @@ router.post("/", [validacionesCrearProducto, validarCampos], postProducto);
  *   put:
  *     summary: Actualizar un producto por ID
  *     tags: [Productos]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID único del producto a actualizar
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               nombre:
- *                 type: string
- *               precio:
- *                 type: number
- *               stock:
- *                 type: number
- *               categoria_id:
- *                 type: string
+ *             $ref: '#/components/schemas/Producto'
  *     responses:
  *       200:
  *         description: Producto actualizado correctamente
  *       404:
  *         description: Producto no encontrado
+ *       401:
+ *         description: No tienes permisos para editar este producto
  */
-router.put("/:id", putProducto);
-
+router.put(
+  "/:id", [autenticar, requiereRol(['admin', 'vendedor']), validacionIdProducto, validarCampos], putProducto);
 /**
  * @swagger
  * /api/productos/{id}:
  *   delete:
  *     summary: Eliminar un producto por ID
  *     tags: [Productos]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID único del producto a eliminar
  *     responses:
  *       200:
  *         description: Producto eliminado correctamente
  *       404:
  *         description: Producto no encontrado
  */
-router.delete("/:id", [validacionIdProducto, validarCampos], deleteProducto);
+router.delete(
+  "/:id", [autenticar, requiereRol(['admin', 'vendedor']), validacionIdProducto, validarCampos], deleteProducto);
 
 export default router;

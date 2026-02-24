@@ -11,7 +11,7 @@ const productoSchema = new mongoose.Schema({
     },
     descripcion_ia: {
         type: String,
-        descripcion: 'Descripcion optimizada por Gemini'
+        descripcion: ""
     },
     analisis_ia: {
         type: Object,
@@ -48,12 +48,6 @@ const productoSchema = new mongoose.Schema({
         }
     });
 
-productoSchema.statics.buscarPorId = async function (id) {
-    return await this.findById(id)
-        .populate('vendedor_id', 'nombre email')
-        .populate('categoria_id', 'nombre')
-};
-
 productoSchema.statics.obtenerConFiltro = async function (filtros = {}) {
     const query = {};
 
@@ -83,7 +77,7 @@ productoSchema.statics.obtenerConFiltro = async function (filtros = {}) {
     const skip = (pagina - 1) * limite;
 
     return await this.find(query)
-        .populate('vendedor_id', 'nombre')
+        .populate('vendedor_id', 'nombre email')
         .populate('categoria_id', 'nombre')
         .sort({ fecha_creacion: -1 })
         .limit(limite)

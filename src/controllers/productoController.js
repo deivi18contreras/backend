@@ -1,17 +1,16 @@
 import Producto from "../models/Producto.js"
 import Categoria from "../models/Categoria.js"
 
-
-export const postProducto = async (req, res) => {
+export const postProducto = async (req, res, next) => {
     try {
-        let { nombre, descripcion, precio, stock, vendedor_id, categoria_id } = req.body;
+        const { nombre, descripcion, precio, stock, vendedor_id, categoria_id } = req.body;
 
-        if (!descripcion || descripcion.trim() === "") {
-            const categoriaInfo = await Categoria.findById(categoria_id);
-            const nombreCate = categoriaInfo ? categoriaInfo.nombre : "General"
-
-            console.log("🤖 Generando descripción con IA...");
-            descripcion = await generarDescripcionIA(nombre, nombreCate)
+        const existeCategoria = await Categoria.findById(categoria_id);
+        if (!categoria_id) {
+            return res.status(404).json({
+                error: true,
+                msg: "La categoría especificada no existe en la base de datos"
+            });
         }
 
         const nuevoProducto = new Producto({
@@ -30,39 +29,54 @@ export const postProducto = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ msg: "Error al obtener productos" })
+        next(error);
     }
 };
 
-export const getProductos = async (req, res) => {
+export const getProductos = async (req, res, next) => {
     try {
         const productos = await Producto.find()
             .populate('vendedor_id', 'nombre email')
-            .populate('categoria_id', 'nombre');
+            .populate('categoria_id', 'nombre')
+            .sort({ fecha_creacion: -1 });
         res.json(productos)
     } catch (error) {
-        res.status(500).json({ msg: "Error al obtener el producto" })
+        next(error)
     }
 };
 
-export const putProducto = async (req, res) => {
+export const putProducto = async (req, res, next) => {
     try {
         const { id } = req.params;
         const data = req.body;
 
+        if (data.categoria_id) {
+            const existeCat = await Categoria.findById(data.categoria_id);
+            if (!existeCat) {
+                return res.status(400).json({ error: true, msg: "La categoría nueva no existe" });
+            }
+        }
+
         const productoActualizado = await Producto.findByIdAndUpdate(id, data, { new: true });
+        if (!productoActualizado) {
+            return res.status(404).json({ error: true, msg: "Producto no encontrado" });
+        };
         res.json({ msg: "Producto actualizado", productoActualizado })
+        
     } catch (error) {
-        res.status(500).json({ msg: "Error al actualizar el producto" })
+        next(error)
     }
 };
 
-export const deleteProducto = async (req, res) => {
+export const deleteProducto = async (req, res, next) => {
     try {
         const { id } = req.params;
-        await Producto.findByIdAndDelete(id);
+        const productoEliminado = await Producto.findByIdAndDelete(id);
+        if (!productoEliminado) {
+            return res.status(404).json({ error: true, msg: "Producto no encontrado" });
+        }
         res.json({ msg: "Producto eliminado del marketplace" });
     } catch (error) {
-        res.status(500).json({ msg: "Error al eliminar el producto" });
+        next(error)
     }
 }
