@@ -2,7 +2,8 @@ import { Router } from "express";
 import { getProductos, postProducto, putProducto, deleteProducto } from "../controllers/productoController.js";
 import { validacionIdProducto, validacionesCrearProducto } from "../middlewares/validarProducto.js";
 import { validarCampos } from "../middlewares/validaciones.js";
-import {autenticar, requiereRol} from "../middlewares/auth.js"
+import {autenticar, requiereRol} from "../middlewares/auth.js";
+import {subirImagenProducto} from "../config/multer.js"
 
 const router = Router(); 
 
@@ -29,27 +30,46 @@ router.get("/", getProductos);
  * @swagger
  * /api/productos:
  *   post:
- *     summary: Crear un producto con IA
+ *     summary: Crear un producto con galería de imágenes e IA
  *     tags: [Productos]
  *     security:
  *       - BearerAuth: []
- *     description: Permite a Administradores y Vendedores crear un producto. La descripción puede ser generada vía IA Gemini.
+ *     description: Permite a Administradores y Vendedores crear un producto con hasta 5 imágenes.
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/Producto'
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               precio:
+ *                 type: number
+ *               stock:
+ *                 type: number
+ *               categoria_id:
+ *                 type: string
+ *               vendedor_id:
+ *                 type: string
+ *               imagenes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Hasta 5 archivos de imagen (JPG, PNG, WEBP)
  *     responses:
  *       201:
  *         description: Producto creado exitosamente
  *       400:
- *         description: Datos de entrada inválidos
+ *         description: Datos de entrada inválidos o formato de archivo no permitido
  *       401:
- *         description: No autorizado - Token faltante o inválido
+ *         description: No autorizado
  */
 router.post(
-  "/", [autenticar, requiereRol(['admin', 'vendedor']), validacionesCrearProducto, validarCampos], postProducto);
+  "/", [autenticar, subirImagenProducto, requiereRol(['admin', 'vendedor']), validacionesCrearProducto, validarCampos], postProducto);
 
 /**
  * @swagger

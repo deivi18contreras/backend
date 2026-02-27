@@ -4,24 +4,23 @@ import Usuario from '../models/Usuario.js'
 export const autenticar = async (req, res, next) => {
     try {
         const autHeader = req.headers.authorization;
-
         const token = extraerTokenDeHeader(autHeader);
         const payload = validarToken(token);
+
+        if (!payload.id) {
+            return res.status(401).json({ error: true, mensaje: "El token no contiene un ID de usuario válido" });
+        }
+
         const usuario = await Usuario.findById(payload.id).select('-password');
 
         if (!usuario) {
-            return res.status(401).json({
-                error: true,
-                mensaje: 'Token válido, pero el usuario ya no existe en la base de datos'
-            })
+            return res.status(401).json({ error: true, mensaje: "Usuario no encontrado en la base de datos" });
         }
+
         req.usuario = usuario;
         next();
     } catch (error) {
-        return res.status(401).json({
-            error: true,
-            mensaje: error.message 
-        });
+        next(error)
     }
 };
 
@@ -31,7 +30,6 @@ export const requiereRol = (rolesPermitidos) => {
 
         if (!roles.includes(req.usuario.rol)) {
             return res.status(403).json({
-                error: true,
                 mensaje: 'No tienes permisos suficientes para realizar esta acción',
                 permisos_necesarios: roles,
                 tu_rol: req.usuario.rol

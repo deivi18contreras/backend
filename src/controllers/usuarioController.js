@@ -12,7 +12,7 @@ export const getUsuario = async (req, res, next) => {
             pagina: req.query.pagina,
             limite: req.query.limite
         };
-        const usuarios = await Usuario.find(filtros);
+        const usuarios = await Usuario.obtenerTodos(filtros);
 
         res.json({
             usuarios,
@@ -150,17 +150,23 @@ export const forgotPassword = async (req, res, next) =>{
 
 export const resetPassword = async (req, res, next) => {
     try {
-        const { email, code, newPassword } = req.body;
+        const { code, newPassword } = req.body;
+        if(!newPassword || newPassword.trim() === ""){
+             return res.status(400).json({ error: true, mensaje: "La nueva contraseña es obligatoria" });
+    }
+    const tokenBusqueda = String(code).trim();
+    console.log("🔍 Buscando usuario con token:", tokenBusqueda);
 
         const usuario = await Usuario.findOne({
-            email,
             resetToken: code,
             resetTokenExpire: { $gt: Date.now() } 
         });
 
         if (!usuario) {
+            console.log("❌ No se encontró usuario o el token expiró");
             return res.status(400).json({ error: true, mensaje: "Código inválido o expirado" });
         }
+        console.log("✅ Usuario encontrado:", usuario.email)
 
        
         const salt = bcrypt.genSaltSync(10);

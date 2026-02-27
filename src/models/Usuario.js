@@ -12,14 +12,14 @@ const usuarioSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: true, 
         minlength: 8,
         maxlength: 100
     },
     rol: {
         type: String,
         enum: ["comprador", "vendedor", "admin"],
-        default: "comprador"
+        default: "vendedor"
     },
     resetToken: {
         type: String,

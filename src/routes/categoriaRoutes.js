@@ -1,8 +1,9 @@
 import { Router } from "express";
 import {validarCampos} from "../middlewares/validaciones.js"
 import {validacionCrearCategoria, validacionesIdCategoria} from "../middlewares/validarCategoria.js"
-
 import {getCategorias, postCategoria, putCategoria, deleteCategoria}from "../controllers/categoriasController.js"
+import {autenticar, requiereRol} from "../middlewares/auth.js"
+import {subirIconoCategoria} from "../config/multer.js"
 
 const router = Router();
 /**
@@ -18,17 +19,20 @@ const router = Router();
  */
 router.get("/",getCategorias);
 
+
 /**
  * @swagger
  * /api/categorias:
  *   post:
- *     summary: Crear una nueva categoría
+ *     summary: Crear una nueva categoría con icono
  *     tags:
  *       - Categorías
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -42,22 +46,23 @@ router.get("/",getCategorias);
  *                 example: Dispositivos y gadgets tecnológicos
  *               imagen_icono:
  *                 type: string
- *                 example: https://img.icons8.com/cpu
+ *                 format: binary
+ *                 description: Archivo de imagen (JPG, PNG, WEBP) para el icono
  *               palabras_clave:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example:
- *                   - tecnologia
- *                   - gadgets
- *                   - pc
+ *                 example: ["tecnologia", "gadgets", "pc"]
  *     responses:
  *       201:
  *         description: Categoría creada con éxito
  *       400:
  *         description: Error en los datos enviados
+ *       401:
+ *         description: No autorizado - Se requiere rol de administrador
  */
-router.post("/", [validacionCrearCategoria, validarCampos],postCategoria);
+
+router.post("/", [autenticar,requiereRol(['admin']), subirIconoCategoria, validacionCrearCategoria, validarCampos], postCategoria);
 
 /**
  * @swagger
@@ -92,7 +97,7 @@ router.post("/", [validacionCrearCategoria, validarCampos],postCategoria);
  *       404:
  *         description: Categoría no encontrada
  */
-router.put("/", [validacionesIdCategoria, validarCampos],putCategoria);
+router.put("/", [autenticar, requiereRol(['admin']), subirIconoCategoria, validacionesIdCategoria, validarCampos],putCategoria);
 
 /**
  * @swagger
@@ -114,6 +119,6 @@ router.put("/", [validacionesIdCategoria, validarCampos],putCategoria);
  *       404:
  *         description: Categoría no encontrada
  */
-router.delete("/", [validacionesIdCategoria, validarCampos], deleteCategoria);
+router.delete("/:id", [autenticar, requiereRol(['admin']), subirIconoCategoria, validacionesIdCategoria, validarCampos], deleteCategoria);
 
 export default router;

@@ -6,11 +6,19 @@ export const postProducto = async (req, res, next) => {
         const { nombre, descripcion, precio, stock, vendedor_id, categoria_id } = req.body;
 
         const existeCategoria = await Categoria.findById(categoria_id);
-        if (!categoria_id) {
+        if (!existeCategoria) {
             return res.status(404).json({
                 error: true,
                 msg: "La categoría especificada no existe en la base de datos"
             });
+        }
+        let imagenes = [];
+        if (req.files && req.files.length > 0) {
+            imagenes = req.files.map((file, index) => ({
+                url: file.path,          // URL local o de Cloudinary
+                public_id: file.filename, // ID para borrar luego
+                esPrincipal: index === 0  // La primera es la principal por defecto
+            }));
         }
 
         const nuevoProducto = new Producto({
@@ -19,7 +27,8 @@ export const postProducto = async (req, res, next) => {
             precio,
             stock,
             vendedor_id,
-            categoria_id
+            categoria_id,
+            imagenes
         });
         await nuevoProducto.save();
 
@@ -35,11 +44,12 @@ export const postProducto = async (req, res, next) => {
 
 export const getProductos = async (req, res, next) => {
     try {
-        const productos = await Producto.find()
-            .populate('vendedor_id', 'nombre email')
-            .populate('categoria_id', 'nombre')
-            .sort({ fecha_creacion: -1 });
-        res.json(productos)
+        const productos = await Producto.obtenerConFiltro(req.query);
+        res.json({
+            ok: true,
+            total: productos.length,
+            productos
+        })
     } catch (error) {
         next(error)
     }
@@ -49,6 +59,14 @@ export const putProducto = async (req, res, next) => {
     try {
         const { id } = req.params;
         const data = req.body;
+        
+        if (req.files && req.files.length > 0) {
+            data.imagenes = req.files.map((file, index) => ({
+                url: file.path,
+                public_id: file.filename,
+                esPrincipal: index === 0
+            }));
+        }
 
         if (data.categoria_id) {
             const existeCat = await Categoria.findById(data.categoria_id);
@@ -62,7 +80,7 @@ export const putProducto = async (req, res, next) => {
             return res.status(404).json({ error: true, msg: "Producto no encontrado" });
         };
         res.json({ msg: "Producto actualizado", productoActualizado })
-        
+
     } catch (error) {
         next(error)
     }

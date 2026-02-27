@@ -3,6 +3,7 @@ import { login, registro } from '../controllers/authController.js';
 import { validarCampos } from "../middlewares/validaciones.js";
 import { validarRegistro, validarLogin } from "../middlewares/validarAuth.js";
 import { forgotPassword, resetPassword } from "../controllers/usuarioController.js";
+import { authLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
@@ -22,7 +23,7 @@ const router = Router();
  *       201:
  *         description: Usuario creado exitosamente
  */
-router.post("/registro", [validarRegistro, validarCampos], registro);
+router.post("/registro", [authLimiter, validarRegistro, validarCampos], registro);
 
 /**
  * @swagger
@@ -50,7 +51,7 @@ router.post("/registro", [validarRegistro, validarCampos], registro);
  *       200:
  *         description: Login exitoso
  */
-router.post("/login", [validarLogin, validarCampos], login);
+router.post("/login", [authLimiter, validarLogin, validarCampos], login);
 
 /**
  * @swagger
@@ -75,7 +76,7 @@ router.post("/login", [validarLogin, validarCampos], login);
  *       404:
  *         description: Usuario no encontrado
  */
-router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password', authLimiter, forgotPassword);
 
 /**
  * @swagger
@@ -90,9 +91,6 @@ router.post('/forgot-password', forgotPassword);
  *           schema:
  *             type: object
  *             properties:
- *               email:
- *                 type: string
- *                 format: email
  *               code:
  *                 type: string
  *                 example: "123456"
@@ -105,6 +103,6 @@ router.post('/forgot-password', forgotPassword);
  *       400:
  *         description: Código inválido o expirado
  */
-router.post('/reset-password', resetPassword);
+router.post('/reset-password', authLimiter, resetPassword);
 
 export default router;

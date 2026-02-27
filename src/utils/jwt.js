@@ -1,14 +1,17 @@
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRE = process.env.JWT_EXPIRE
+const JWT_EXPIRE = process.env.JWT_EXPIRE || '24h'
 
 export const generarToken = (usuario) =>{
+
+    const useId = usuario._id ? usuario._id.toString() : usuario.id;
     const payload = {
-        id: usuario._id,
+        id: useId, 
         email: usuario.email,
-        rorl: usuario.rol
+        rol: usuario.rol
     };
+    console.log("Generando token para el ID:", useId);
     return jwt.sign(payload, process.env.JWT_SECRET,{
         expiresIn: JWT_EXPIRE,
         issuer: 'marketplace-api',
@@ -16,7 +19,7 @@ export const generarToken = (usuario) =>{
     })
 };
 
-export const validarToken = () =>{
+export const validarToken = (token) =>{
     try {
         return jwt.verify(token, JWT_SECRET, {
             issuer: 'marketplace-api',

@@ -26,10 +26,11 @@ const productoSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    imagen_url: {
-        type: String,
-        default: ""
-    },
+    imagenes: [{
+        url: { type: String, required: true },
+        public_id: { type: String },
+        esPrincipal: { type: Boolean, default: false }
+    }],
     vendedor_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
@@ -56,7 +57,6 @@ productoSchema.statics.obtenerConFiltro = async function (filtros = {}) {
 
     if (filtros.precio_min || filtros.precio_max) {
         query.precio = {}
-
         if (filtros.precio_min) query.precio.$gte = Number(filtros.precio_min);
         if (filtros.precio_max) query.precio.$lte = Number(filtros.precio_max);
     }
@@ -83,5 +83,4 @@ productoSchema.statics.obtenerConFiltro = async function (filtros = {}) {
         .limit(limite)
         .skip(skip);
 };
-
 export default mongoose.model("Producto", productoSchema)

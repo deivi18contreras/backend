@@ -21,18 +21,18 @@ const storage = multer.diskStorage({
 
         let carpeta = 'uploads/productos';
 
-        if(file.fieldname === 'imagen_icono');{
+        if(file.fieldname === 'imagen_icono' || file.fieldname === 'icono');{
             carpeta = 'uploads/categorias'
         }
         cb(null,carpeta);
     },
     filename: (req, file, cb ) =>{
-        const extension = path.extname(file.originalname);
+        const extension = path.extname(file.originalname).toLowerCase();
 
         const timestamp = Date.now();
         const radom = Math.round(Math.random() * 1E9);
 
-        const nombreUnico = `${timestamp}-${radom} ${extension}`;
+        const nombreUnico = `${timestamp}-${radom}-${extension}`;
         cb(null, nombreUnico);
     }
 })
@@ -58,5 +58,5 @@ const upload = multer({
     }
 });
 
-export const subirImagenProducto = upload.single('imagen_producto');
+export const subirImagenProducto = upload.single('imagenes',5);
 export const subirIconoCategoria = upload.single('imagen_icono');

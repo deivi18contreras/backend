@@ -5,6 +5,33 @@ import { getUsuario, getUsuarioEmail,getUsuarioById, postUsuario, putUsuario, de
 import { requiereRol, autenticar} from "../middlewares/auth.js"
 
 const router = Router();
+/**
+ * @swagger
+ * /api/usuarios:
+ *   post:
+ *     summary: Crear un nuevo usuario
+ *     tags: [Usuarios]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UsuarioInput'
+ *     responses:
+ *       201:
+ *         description: Usuario creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post("/", [validacionCrearUsuario, validarCampos], postUsuario);
 
 router.use(autenticar)
 /**
@@ -52,7 +79,7 @@ router.use(autenticar)
 router.get("/", requiereRol('admin'), getUsuario);
 
 /**
- * @swagger
+ * @swagger 
  * /api/usuarios/buscar:
  *   get:
  *     summary: Buscar usuario por email
@@ -113,33 +140,6 @@ router.get("/buscar", requiereRol('admin'), getUsuarioEmail);
  */
 router.get("/:id", [validacionId, validarCampos], getUsuarioById);
 
-/**
- * @swagger
- * /api/usuarios:
- *   post:
- *     summary: Crear un nuevo usuario
- *     tags: [Usuarios]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UsuarioInput'
- *     responses:
- *       201:
- *         description: Usuario creado correctamente
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Usuario'
- *       400:
- *         description: Error de validación
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post("/", [validacionCrearUsuario, validarCampos], postUsuario);
 
 /**
  * @swagger

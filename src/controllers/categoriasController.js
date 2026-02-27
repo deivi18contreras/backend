@@ -3,8 +3,12 @@ import Categoria from "../models/Categoria.js"
 
 export const getCategorias = async (req, res) =>{
     try {
-        const Categorias = await Categoria.find();
-        res.status(200).json({Categorias})
+        const categorias = await Categoria.obtenerConFiltro(req.query);
+        res.status(200).json({
+            ok: true,
+            total: categorias.length,
+            categorias
+        })
     } catch (error) {
         res.status(400).json({error})
     }
@@ -12,7 +16,7 @@ export const getCategorias = async (req, res) =>{
 
 export const postCategoria = async  (req, res ) => {
     try {
-        const {nombre, descripcion, imagen_icono, palabras_clave} = req.body;
+        const {nombre, descripcion, palabras_clave} = req.body;
         const existe = await Categoria.findOne({nombre});
 
         if(existe){
@@ -24,8 +28,8 @@ export const postCategoria = async  (req, res ) => {
         const nuevaCategoria = new Categoria ({
             nombre,
             descripcion,
-            imagen_icono,
-            palabras_clave
+            imagen_icono: req.file ? req.file.path : "",
+            palabras_clave: Array.isArray(palabras_clave) ? palabras_clave : (palabras_clave ? palabras_clave.split(',') : [])
         });
 
         await nuevaCategoria.save()
@@ -41,17 +45,23 @@ export const postCategoria = async  (req, res ) => {
 };
 
 
-export const putCategoria = async (req, res) =>{
+export const putCategoria = async (req, res) => {
     try {
-        const {id} = req.params;
-        const categoriaActualizada = await Categoria.findByIdAndUpdate(id, req.body,{new: true});
-
-        if(!categoriaActualizada){
-            return res.status(404).json({msg:"Categoría no encontrada"})
+        const { id } = req.params;
+        const data = { ...req.body };
+        
+        if (req.file) {
+            data.imagen_icono = req.file.path;
         }
-        res.json({msg:"Categoría actualizada", categoriaActualizada})
+
+        const categoriaActualizada = await Categoria.findByIdAndUpdate(id, data, { new: true });
+
+        if (!categoriaActualizada) {
+            return res.status(404).json({ msg: "Categoría no encontrada" });
+        }
+        res.json({ msg: "Categoría actualizada", categoriaActualizada });
     } catch (error) {
-        res.status(500).json({msg:"Hubo un error al actualizar"})
+        res.status(500).json({ msg: "Hubo un error al actualizar" });
     }
 };
 
