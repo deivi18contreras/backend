@@ -11,8 +11,14 @@ export const validacionCrearCategoria =[
     .isLength({max:300}).withMessage("La descripcion no puede exceder los 300 caracteres"),
 
     body("palabras_clave")
-    .optional()
-    .isArray().withMessage("Las palabras clave deben ser un arreglo de strings")
+        .optional()
+        .customSanitizer(value => {
+            if (typeof value === 'string') {
+                return value.split(',').map(p => p.trim()).filter(p => p !== '');
+            }
+            return value;
+        })
+        .isArray().withMessage("Las palabras clave deben ser un arreglo de strings")
 ];
 
 export const validacionesIdCategoria = [

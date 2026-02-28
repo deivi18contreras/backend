@@ -15,9 +15,9 @@ export const postProducto = async (req, res, next) => {
         let imagenes = [];
         if (req.files && req.files.length > 0) {
             imagenes = req.files.map((file, index) => ({
-                url: file.path,          // URL local o de Cloudinary
-                public_id: file.filename, // ID para borrar luego
-                esPrincipal: index === 0  // La primera es la principal por defecto
+                url: file.path,          
+                public_id: file.filename, 
+                esPrincipal: index === 0  
             }));
         }
 

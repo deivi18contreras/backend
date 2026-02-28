@@ -1,20 +1,26 @@
 import Categoria from "../models/Categoria.js"
 
 
-export const getCategorias = async (req, res) =>{
+export const getCategorias = async (req, res, next) =>{
     try {
         const categorias = await Categoria.obtenerConFiltro(req.query);
+
+        const total = await Categoria.countDocuments(
+            req.query.incluir_inactivas === 'true' ? {} : { estado: true }
+        );
         res.status(200).json({
             ok: true,
-            total: categorias.length,
+            total_db: total,
+            total_pagina: categorias.length,
+            pagina: parseInt(req.query.pagina) || 1,
             categorias
         })
     } catch (error) {
-        res.status(400).json({error})
+       next(error)
     }
 };
 
-export const postCategoria = async  (req, res ) => {
+export const postCategoria = async  (req, res, next) => {
     try {
         const {nombre, descripcion, palabras_clave} = req.body;
         const existe = await Categoria.findOne({nombre});
@@ -38,14 +44,12 @@ export const postCategoria = async  (req, res ) => {
             categoria: nuevaCategoria
         })
     } catch (error) {
-        res.status(500).json({
-            msg: "Hubo un error al crear la categoría"
-        })
+       next(error)
     }
 };
 
 
-export const putCategoria = async (req, res) => {
+export const putCategoria = async (req, res, next) => {
     try {
         const { id } = req.params;
         const data = { ...req.body };
@@ -61,11 +65,11 @@ export const putCategoria = async (req, res) => {
         }
         res.json({ msg: "Categoría actualizada", categoriaActualizada });
     } catch (error) {
-        res.status(500).json({ msg: "Hubo un error al actualizar" });
+        next(error)
     }
 };
 
-export const deleteCategoria = async (req, res) =>{
+export const deleteCategoria = async (req, res, next) =>{
     try {
         const {id} = req.params;
         const categoriaEliminada = await Categoria.findByIdAndDelete(id);
@@ -76,6 +80,6 @@ export const deleteCategoria = async (req, res) =>{
         res.json({msg:"Categoría eliminada"})
 
     } catch (error) {
-         res.status(500).json({ msg: error.message })
+       next(error)
     }
 }
