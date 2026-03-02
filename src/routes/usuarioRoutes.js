@@ -5,6 +5,13 @@ import { getUsuario, getUsuarioEmail,getUsuarioById, postUsuario, putUsuario, de
 import { requiereRol, autenticar} from "../middlewares/auth.js"
 
 const router = Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Usuarios
+ *   description: Gestión de usuarios del marketplace
+ */
 /**
  * @swagger
  * /api/usuarios:

@@ -13,9 +13,6 @@ export const validacionesCrearProducto =[
     body('stock', 'El stock debe ser un número entero no negativo')
     .isInt({min: 0}),
 
-    body('vendedor_id','El ID del vendedor no es valido')
-    .isMongoId(),
-
     body('categoria_id', 'El ID de la categoria no es válido')
     .isMongoId(),
 ];

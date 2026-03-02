@@ -9,6 +9,12 @@ const router = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Gestión del login del marketplace
+ */
+/**
+ * @swagger
  * /api/auth/registro:
  *   post:
  *     summary: Registrar un nuevo usuario

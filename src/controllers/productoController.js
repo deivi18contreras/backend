@@ -1,25 +1,26 @@
 import Producto from "../models/Producto.js"
 import Categoria from "../models/Categoria.js"
 
+
 export const postProducto = async (req, res, next) => {
     try {
-        const { nombre, descripcion, precio, stock, vendedor_id, categoria_id } = req.body;
+        const { nombre, descripcion, precio, stock, categoria_id } = req.body;
+        const vendedor_id = req.usuario.id;
 
         const existeCategoria = await Categoria.findById(categoria_id);
         if (!existeCategoria) {
             return res.status(404).json({
-                error: true,
                 msg: "La categoría especificada no existe en la base de datos"
             });
         }
-        let imagenes = [];
-        if (req.files && req.files.length > 0) {
-            imagenes = req.files.map((file, index) => ({
-                url: file.path,          
-                public_id: file.filename, 
-                esPrincipal: index === 0  
-            }));
-        }
+       
+       
+
+        const imagenes = req.files.map((file, index) =>({
+             url: `/uploads/productos/${file.filename}`,
+            public_id: file.filename,
+            esPrincipal: index === 0
+        }))
 
         const nuevoProducto = new Producto({
             nombre,

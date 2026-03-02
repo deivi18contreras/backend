@@ -9,6 +9,13 @@ const router = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Productos
+ *   description: Gestión de productos del marketplace
+ */
+
+/**
+ * @swagger
  * /api/productos:
  *   get:
  *     summary: Listar todos los productos
@@ -30,13 +37,78 @@ router.get("/", getProductos);
  * @swagger
  * /api/productos:
  *   post:
- *     summary: Crear un producto con galería de imágenes e IA
+ *     summary: Crear un producto con hasta 5 imágenes
  *     tags: [Productos]
  *     security:
  *       - BearerAuth: []
- *     description: Permite a Administradores y Vendedores crear un producto con hasta 5 imágenes.
  *     requestBody:
  *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *               - precio
+ *               - categoria_id
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: Audífonos Sony WH-1000XM5
+ *               descripcion:
+ *                 type: string
+ *                 example: Cancelación de ruido profesional
+ *               precio:
+ *                 type: number
+ *                 example: 350
+ *               stock:
+ *                 type: integer
+ *                 example: 10
+ *               categoria_id:
+ *                 type: string
+ *                 example: 65f3a12b4f1a2c3d4e5f6790
+ *               imagenes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Hasta 5 archivos de imagen (JPG, PNG, WEBP)
+ *     responses:
+ *       201:
+ *         description: Producto creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Producto'
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autorizado
+ */
+router.post(
+  "/", [autenticar, requiereRol(['admin', 'vendedor']), subirImagenProducto, validacionesCrearProducto, validarCampos], postProducto);
+
+/**
+ * @swagger
+ * /api/productos/{id}:
+ *   put:
+ *     summary: Actualizar un producto por ID (permite actualizar imágenes)
+ *     tags: [Productos]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del producto
+ *     requestBody:
+ *       required: false
  *       content:
  *         multipart/form-data:
  *           schema:
@@ -49,59 +121,30 @@ router.get("/", getProductos);
  *               precio:
  *                 type: number
  *               stock:
- *                 type: number
+ *                 type: integer
  *               categoria_id:
- *                 type: string
- *               vendedor_id:
  *                 type: string
  *               imagenes:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Hasta 5 archivos de imagen (JPG, PNG, WEBP)
- *     responses:
- *       201:
- *         description: Producto creado exitosamente
- *       400:
- *         description: Datos de entrada inválidos o formato de archivo no permitido
- *       401:
- *         description: No autorizado
- */
-router.post(
-  "/", [autenticar, subirImagenProducto, requiereRol(['admin', 'vendedor']), validacionesCrearProducto, validarCampos], postProducto);
-
-/**
- * @swagger
- * /api/productos/{id}:
- *   put:
- *     summary: Actualizar un producto por ID
- *     tags: [Productos]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID único del producto a actualizar
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Producto'
+ *                 description: Nuevas imágenes (opcional)
  *     responses:
  *       200:
  *         description: Producto actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Producto'
  *       404:
  *         description: Producto no encontrado
  *       401:
- *         description: No tienes permisos para editar este producto
+ *         description: No autorizado
  */
 router.put(
-  "/:id", [autenticar, requiereRol(['admin', 'vendedor']), validacionIdProducto, validarCampos], putProducto);
+  "/:id", [autenticar, requiereRol(['admin', 'vendedor']),subirImagenProducto, validacionIdProducto, validarCampos], putProducto);
+  
 /**
  * @swagger
  * /api/productos/{id}:

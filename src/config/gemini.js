@@ -55,25 +55,48 @@ class GeminiClient {
 
   async generarDescripcionProducto(nombre, categoria) {
     const prompt = `
-Eres un experto en e-commerce y marketing digital.
-Crea una descripción persuasiva para:
+      Eres un experto en e-commerce. Crea una descripción persuasiva para:
+      Producto: ${nombre}
+      Categoría: ${categoria}
+      - Máximo 100 palabras, tono profesional, sin emojis.
+      Devuelve solo el texto de la descripción.`;
 
-Producto: ${nombre}
-Categoría: ${categoria}
+    return await this.generarContenido(prompt, { temperatura: 0.8 });
+  }
 
-- Máximo 100 palabras
-- Tono profesional y atractivo
-- Resalta beneficios
-- No uses emojis
-- No incluyas título
+  async analizarPatronesYRecomendar(historial) {
+    const prompt = `
+      Actúa como un analista de datos de Marketplace. 
+      Basado en este historial de compras: ${JSON.stringify(historial)}
+      
+      Analiza los patrones y devuelve un JSON estrictamente con este formato:
+      {
+        "categoriasSugeridas": ["nombre_categoria1", "nombre_categoria2"],
+        "score": 0.95,
+        "explicacion": "Breve razón de la recomendación"
+      }
+      Responde SOLO el objeto JSON.`;
 
-Devuelve solo la descripción.
-`;
+    const respuesta = await this.generarContenido(prompt, { temperatura: 0.3 });
+ 
+    return JSON.parse(respuesta.replace(/```json|```/g, ""));
+  }
 
-    return await this.generarContenido(prompt, {
-      temperatura: 0.8,
-      maxTokens: 250,
-    });
+  async moderarContenido(texto) {
+    const prompt = `
+      Actúa como moderador de contenido para un Marketplace.
+      Analiza el siguiente texto: "${texto}"
+      
+      Detecta: lenguaje ofensivo, datos de contacto (teléfonos, emails) o estafas.
+      Devuelve un JSON estrictamente con este formato:
+      {
+        "aprobado": boolean,
+        "motivo": "string explicativo si es rechazado, o vacío si es aprobado"
+      }
+      Responde SOLO el objeto JSON.`;
+
+    const respuesta = await this.generarContenido(prompt, { temperatura: 0.1 });
+    return JSON.parse(respuesta.replace(/```json|```/g, ""));
   }
 }
 

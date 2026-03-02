@@ -14,7 +14,9 @@ import swaggerUi from 'swagger-ui-express';
 import usuarioRoutes from "./src/routes/usuarioRoutes.js"
 import productoRoutes from "./src/routes/productoRoutes.js"
 import categoriaRoutes from "./src/routes/categoriaRoutes.js"
+import ordenRoutes from "./src/routes/ordenRoutes.js"
 import authRoutes from "./src/routes/authRoutes.js"
+import iaRoutes from "./src/routes/iaRoutes.js"
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +34,9 @@ app.use('/api', generalRate);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/categorias', categoriaRoutes);
-app.use('/api/auth', authRoutes)
+app.use('/api/ordenes',ordenRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/ia',iaRoutes);
 
 //documentacion
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
@@ -45,11 +49,18 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        error: true,
-        mensaje: err.message || 'Error interno del servidor'
+  console.error("🔥 ERROR REAL:", err);
+  if (err.message.includes("Tipo de archivo")) {
+    return res.status(400).json({
+      error: true,
+      mensaje: err.message
     });
+  }
+
+  res.status(500).json({
+    error: true,
+    mensaje: "Error interno del servidor"
+  });
 });
 
 app.listen(PORT, () => {

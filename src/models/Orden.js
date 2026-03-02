@@ -6,22 +6,36 @@ const ordenSchema = new mongoose.Schema({
         ref: 'Usuario',
         required: true
     },
-    total: {
-        type: Number,
+    productos: [{
+        producto_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Producto',
+            required: true
+        },
+        cantidad: { type: Number, required: true, min: 1},
+        precio_unitario: { type: Number, required: true },
+        subtotal: { type: Number, required: true }
+    }],
+    total: { type: Number, required: true },
+    direccion_envio: { type: String, required: true },
+    metodo_pago: {
+        type: String,
+        enum: ['tarjeta', 'efecty', 'transferencia'],
         required: true
     },
+    estado_pago: {
+        type: String,
+        enum: ['pendiente', 'completado', 'fallido'],
+        default: 'pendiente'
+    },
+    notas: String,
     estado: {
         type: String,
-        enum: ["pendiente", "pagado", "enviado", "cancelado"],
+        enum: ["pendiente", "pagado", "enviado", "cancelado", "entregado"],
         default: "pendiente"
     }
-},
-    {
-        timestamps: {
-            createdAt: "fecha_creacion",
-            updateAt: true
-        }
-    })
+}, {
+    timestamps: true
+});
 
-
-export default mongoose.model("Orden", ordenSchema)
+export default mongoose.model("Orden", ordenSchema);

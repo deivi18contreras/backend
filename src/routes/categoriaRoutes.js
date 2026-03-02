@@ -3,30 +3,41 @@ import {validarCampos} from "../middlewares/validaciones.js"
 import {validacionCrearCategoria, validacionesIdCategoria} from "../middlewares/validarCategoria.js"
 import {getCategorias, postCategoria, putCategoria, deleteCategoria}from "../controllers/categoriasController.js"
 import {autenticar, requiereRol} from "../middlewares/auth.js"
-import {subirIconoCategoria} from "../config/multer.js"
+import {subirImagenCategoria} from "../config/multer.js"
 
 const router = Router();
+/**
+ * @swagger
+ * tags:
+ *   - name: Categorías
+ *     description: Gestión de categorías del marketplace
+ */
+
 /**
  * @swagger
  * /api/categorias:
  *   get:
  *     summary: Obtener todas las categorías
- *     tags:
- *       - Categorías
+ *     tags: [Categorías]
  *     responses:
  *       200:
- *         description: Lista de categorías enviada correctamente
+ *         description: Lista de categorías obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Categoria'
  */
-router.get("/",getCategorias);
+router.get("/", getCategorias);
 
 
 /**
  * @swagger
  * /api/categorias:
  *   post:
- *     summary: Crear una nueva categoría con icono
- *     tags:
- *       - Categorías
+ *     summary: Crear una nueva categoría con imagen (Solo Admin)
+ *     tags: [Categorías]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -44,33 +55,47 @@ router.get("/",getCategorias);
  *               descripcion:
  *                 type: string
  *                 example: Dispositivos y gadgets tecnológicos
- *               imagen_icono:
+ *               imagen_categoria:
  *                 type: string
  *                 format: binary
- *                 description: Archivo de imagen (JPG, PNG, WEBP) para el icono
+ *                 description: Imagen del icono (JPG, PNG, WEBP)
  *               palabras_clave:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["tecnologia", "gadgets", "pc"]
+ *                 example:
+ *                   - tecnologia
+ *                   - gadgets
+ *                   - pc
  *     responses:
  *       201:
- *         description: Categoría creada con éxito
+ *         description: Categoría creada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Categoria'
  *       400:
- *         description: Error en los datos enviados
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       401:
- *         description: No autorizado - Se requiere rol de administrador
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado - Solo administradores
  */
 
-router.post("/", [autenticar,requiereRol(['admin']), subirIconoCategoria, validacionCrearCategoria, validarCampos], postCategoria);
+router.post("/", [autenticar,requiereRol(['admin']), subirImagenCategoria, validacionCrearCategoria, validarCampos], postCategoria);
 
 /**
  * @swagger
  * /api/categorias/{id}:
  *   put:
- *     summary: Actualizar una categoría por ID
- *     tags:
- *       - Categorías
+ *     summary: Actualizar una categoría por ID (Solo Admin)
+ *     tags: [Categorías]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -79,9 +104,9 @@ router.post("/", [autenticar,requiereRol(['admin']), subirIconoCategoria, valida
  *         schema:
  *           type: string
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -90,22 +115,42 @@ router.post("/", [autenticar,requiereRol(['admin']), subirIconoCategoria, valida
  *                 example: Electrónica Premium
  *               descripcion:
  *                 type: string
- *                 example: Nueva descripción
+ *                 example: Nueva descripción actualizada
+ *               imagen_categoria:
+ *                 type: string
+ *                 format: binary
+ *                 description: Nueva imagen (opcional)
+ *               palabras_clave:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
- *         description: Categoría actualizada
+ *         description: Categoría actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Categoria'
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado
  *       404:
  *         description: Categoría no encontrada
  */
-router.put("/", [autenticar, requiereRol(['admin']), subirIconoCategoria, validacionesIdCategoria, validarCampos],putCategoria);
+
+router.put("/:id", [autenticar, requiereRol(['admin']), subirImagenCategoria, validacionesIdCategoria, validarCampos],putCategoria);
+
 
 /**
  * @swagger
  * /api/categorias/{id}:
  *   delete:
- *     summary: Eliminar una categoría por ID
+ *     summary: Eliminar una categoría por ID (Solo Admin)
  *     tags:
  *       - Categorías
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -115,10 +160,14 @@ router.put("/", [autenticar, requiereRol(['admin']), subirIconoCategoria, valida
  *           type: string
  *     responses:
  *       200:
- *         description: Categoría eliminada
+ *         description: Categoría eliminada correctamente
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado - Solo administradores
  *       404:
  *         description: Categoría no encontrada
  */
-router.delete("/:id", [autenticar, requiereRol(['admin']), subirIconoCategoria, validacionesIdCategoria, validarCampos], deleteCategoria);
+router.delete("/:id", [autenticar, requiereRol(['admin']), validacionesIdCategoria, validarCampos], deleteCategoria);
 
 export default router;
